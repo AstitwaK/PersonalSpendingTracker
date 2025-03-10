@@ -75,7 +75,7 @@ public class UserService {
         return userRepository.findByphone(phone)
                 .map(user -> {
                     log.info("Password reset");
-                    return new ResponseVO("Success", "Password reset    ", user);
+                    return new ResponseVO("Success", "Password reset", user);
                 })
                 .orElseGet(() -> {
                     log.error("User with phone not found");
