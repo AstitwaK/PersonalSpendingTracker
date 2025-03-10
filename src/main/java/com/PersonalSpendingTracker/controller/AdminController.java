@@ -4,6 +4,7 @@ import com.PersonalSpendingTracker.VO.ResponseVO;
 import com.PersonalSpendingTracker.dto.AdminUpdateDto;
 import com.PersonalSpendingTracker.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,15 +28,22 @@ public class AdminController {
      *  1. password.equals("0000") put this password in .properties file and read it from there
      *  2. create a separate method to instantiate response vo object and use it to remove redundant code
      * */
+    @Value("${admin.password}")
+    private String adminPassword;
+
     @PostMapping("/login")
     @ResponseBody
     public ResponseVO adminLogin(@RequestParam String name, @RequestParam String password) {
         name = name.toLowerCase();
-        if (name.equals("admin") & password.equals("0000")) {
-            return new ResponseVO("Success", "Admin logged in successfully", null);
+        if ("admin".equals(name) && adminPassword.equals(password)) {
+            return createResponse("Success", "Admin logged in successfully");
         } else {
-            return  new ResponseVO("Error", "Invalid credentials", null);
+            return createResponse("Error", "Invalid credentials");
         }
+    }
+
+    private ResponseVO createResponse(String status, String message) {
+        return new ResponseVO(status, message, null);
     }
 
     @PostMapping("/update/{id}")
