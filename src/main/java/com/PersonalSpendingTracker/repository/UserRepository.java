@@ -8,6 +8,13 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+
+    /*TODO
+     *  1. write native queries to get all the details in every method
+     *   e.g. -> @Query(value = "select * from user where status = true", nativeQuery = true)
+     *  2. maintain naming convention e.g. -> getAllActiveUsers, findByEmail
+     * */
+
     List<User> findBystatusTrue();
 
     Optional<User> findByemail(String email);
