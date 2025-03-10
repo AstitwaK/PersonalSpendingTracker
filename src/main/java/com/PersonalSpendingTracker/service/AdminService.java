@@ -1,15 +1,21 @@
 package com.PersonalSpendingTracker.service;
 
 import com.PersonalSpendingTracker.VO.ResponseVO;
+import com.PersonalSpendingTracker.VO.UserVO;
 import com.PersonalSpendingTracker.dto.AdminUpdateDto;
 import com.PersonalSpendingTracker.model.User;
 import com.PersonalSpendingTracker.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -17,9 +23,29 @@ public class AdminService {
     @Autowired
     private UserRepository userRepository;
 
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            .withZone(ZoneId.systemDefault()); // Converts Instant to system timezone
+
     public ResponseVO findAllUser() {
-        List<User> users =  userRepository.findBystatusTrue();
-        return new ResponseVO("Success","List of all users",users);
+        List<UserVO> userVOList = userRepository.findBystatusTrue().stream()
+                .map(this::convertToUserVO)
+                .collect(Collectors.toList());
+
+        return new ResponseVO("Success", "List of all users", userVOList);
+    }
+
+    private UserVO convertToUserVO(User user) {
+        return new UserVO(
+                user.getId(),
+                user.getUserName(),
+                user.getEmail(),
+                formatInstant(user.getCreatedTimestamp()),
+                formatInstant(user.getLastUpdatedTimestamp())
+        );
+    }
+
+    private String formatInstant(Instant timestamp) {
+        return (timestamp == null) ? null : DATE_FORMATTER.format(timestamp);
     }
 
     public ResponseVO deleteUser(Long id) {
