@@ -2,8 +2,6 @@ package com.PersonalSpendingTracker.controller;
 
 import com.PersonalSpendingTracker.VO.ResponseVO;
 import com.PersonalSpendingTracker.dto.ExpenseUpdateDto;
-import com.PersonalSpendingTracker.model.Expense;
-import com.PersonalSpendingTracker.model.User;
 import com.PersonalSpendingTracker.service.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

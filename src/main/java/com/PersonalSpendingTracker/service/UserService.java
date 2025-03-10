@@ -21,41 +21,53 @@ public class UserService {
      *  2. Enhance the logic and try to write in minimum conditions
      *  3. check how to encode and decode using key
      * */
-    public ResponseVO login(String name, String password){
-        Optional<User> user = userRepository.findByUserNameAndStatusTrue(name);
-        if(user.isPresent()){
-            User getUser = user.get();
-            byte[] decodedBytes = Base64.getDecoder().decode(getUser.getPassword());
-            String decodedString = new String(decodedBytes);
-            if (decodedString.equals(password)){
-                log.info("User successfully Logged In");
-                return new ResponseVO("Success","User successfully Logged In",user);
-            }
-            log.error("User entered wrong password");
-            return new ResponseVO("Error","User entered wrong password",null);
+    public ResponseVO login(String name, String password) {
+        return userRepository.findByUsernameAndStatusTrue(name)
+                .map(user -> validatePassword(user, password))
+                .orElseGet(() -> createResponse("Error", "User name not found or user is removed", null));
+    }
+
+    private ResponseVO validatePassword(User user, String password) {
+        String decodedPassword = decodeBase64(user.getPassword());
+        if (decodedPassword.equals(password)) {
+            log.info("User successfully Logged In");
+            return createResponse("Success", "User successfully Logged In", user);
         }
-        log.error("User name not found or user is removed");
-        return new ResponseVO("Error","User name not found or user is removed",null);
+        log.error("User entered wrong password");
+        return createResponse("Error", "User entered wrong password", null);
+    }
+
+    private String decodeBase64(String encodedString) {
+        return new String(Base64.getDecoder().decode(encodedString));
+    }
+
+    private ResponseVO createResponse(String status, String message, Object data) {
+        return new ResponseVO(status, message, data);
     }
 
     /*TODO
      *  1. userRepository.findByUserNameAndStatusTrue(name).isPresent() || userRepository.findByemail(email).isPresent()
      *   -> write a native query to validate both the use case in a single method
      * */
-    public ResponseVO register(String name, String email, String password, String phone){
-        if (userRepository.findByUserNameAndStatusTrue(name).isPresent() || userRepository.findByemail(email).isPresent()){
+    public ResponseVO register(String name, String email, String password, String phone) {
+        if (userRepository.findByUsernameOrEmailAndStatusTrue(name, email).isPresent()) {
             log.error("User Name or email already exists");
-            return new ResponseVO("Error","User Name or email already exists", null);
+            return createResponse("Error", "User Name or email already exists", null);
         }
+
         String encodedPassword = Base64.getEncoder().encodeToString(password.getBytes());
 
-        /* TODO
-         *   1. instead of instantiating the user using constructor use builder. That way you don't have to send the null
-         * */
-        User user = new User(null, name, email, encodedPassword, phone, true, null, null);
+        User user = User.builder()
+                .userName(name)
+                .email(email)
+                .password(encodedPassword)
+                .phone(phone)
+                .status(true)
+                .build();
+
         userRepository.save(user);
         log.info("User successfully registered");
-        return new ResponseVO("Success","User successfully registered", user);
+        return createResponse("Success", "User successfully registered", user);
     }
 
     public ResponseVO passwordChange(Long id,String password){
@@ -72,7 +84,7 @@ public class UserService {
     }
 
     public ResponseVO forgotPassword(String phone) {
-        return userRepository.findByphone(phone)
+        return userRepository.findByPhone(phone)
                 .map(user -> {
                     log.info("Password reset");
                     return new ResponseVO("Success", "Password reset", user);

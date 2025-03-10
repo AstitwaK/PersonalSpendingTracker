@@ -27,7 +27,7 @@ public class AdminService {
             .withZone(ZoneId.systemDefault()); // Converts Instant to system timezone
 
     public ResponseVO findAllUser() {
-        List<UserVO> userVOList = userRepository.findBystatusTrue().stream()
+        List<UserVO> userVOList = userRepository.getAllActiveUsers().stream()
                 .map(this::convertToUserVO)
                 .collect(Collectors.toList());
 

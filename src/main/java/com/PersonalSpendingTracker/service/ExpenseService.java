@@ -28,7 +28,7 @@ public class ExpenseService {
     private ExpenseRepository expenseRepository;
 
     public User getByName(String userName){
-        Optional<User> optional = userRepository.findByUserNameAndStatusTrue(userName);
+        Optional<User> optional = userRepository.findByUsernameAndStatusTrue(userName);
         User user = null;
         if(optional.isPresent())
             user = optional.get();
