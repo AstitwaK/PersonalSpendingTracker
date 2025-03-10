@@ -22,7 +22,7 @@ public class AdminService {
         return new ResponseVO("Success","List of all users",users);
     }
 
-    public ResponseVO deactivateById(Long id) {
+    public ResponseVO deleteUser(Long id) {
         return userRepository.findById(id)
                 .map(user -> {
                     user.setStatus(true);

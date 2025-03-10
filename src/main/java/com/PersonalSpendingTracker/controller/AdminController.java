@@ -58,7 +58,7 @@ public class AdminController {
      * */
     @PostMapping("/delete/{id}")
     @ResponseBody
-    public ResponseVO deleteThroughId(@PathVariable(value = "id") long id) {
-        return adminService.deactivateById(id);
+    public ResponseVO deleteUser(@PathVariable(value = "id") long id) {
+        return adminService.deleteUser(id);
     }
 }
