@@ -8,9 +8,10 @@ import com.PersonalSpendingTracker.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -29,12 +30,15 @@ public class AdminService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
             .withZone(ZoneId.systemDefault()); // Converts Instant to system timezone
 
-    public ResponseVO findAllUser() {
+    // Method to get all active users
+    public ResponseEntity<ResponseVO> findAllUser() {
         List<UserVO> userVOList = userRepository.getAllActiveUsers().stream()
                 .map(this::instantiateUserVO)
                 .collect(Collectors.toList());
 
-        return new ResponseVO("Success", "List of all users", userVOList);
+        // Wrapping the response in ResponseEntity
+        ResponseVO response = new ResponseVO("Success", "List of all users", userVOList, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private UserVO instantiateUserVO(User user) {
@@ -51,29 +55,31 @@ public class AdminService {
         return (timestamp == null) ? null : DATE_FORMATTER.format(timestamp);
     }
 
-    public ResponseVO deleteUser(Long id) {
+    // Method to deactivate a user
+    public ResponseEntity<ResponseVO> deleteUser(Long id) {
         return userRepository.findById(id)
                 .map(user -> {
-                    user.setStatus(true);
+                    user.setStatus(true);  // Deactivating the user
                     userRepository.save(user);
                     log.info("User {} deactivated successfully", id);
-                    return new ResponseVO("Success", "User deactivated", user);
+                    ResponseVO response = new ResponseVO("Success", "User deactivated", user, HttpStatus.OK);
+                    return new ResponseEntity<>(response, HttpStatus.OK);
                 })
-                .orElseGet(()->{
+                .orElseGet(() -> {
                     log.warn("User with ID {} not found for deactivation", id);
-                    return new ResponseVO("Error", "User not found", null);
+                    ResponseVO response = new ResponseVO("Error", "User not found", null, HttpStatus.BAD_REQUEST);
+                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                 });
     }
 
-    /*TODO
-    *   1. Apply all the validations using spring annotation e.g. @Valid
-    * */
-    public ResponseVO userUpdate(@Valid AdminUpdateDto adminUpdateDto, Long id) {
+    // Method to update user details
+    public ResponseEntity<ResponseVO> userUpdate(@Valid AdminUpdateDto adminUpdateDto, Long id) {
         Optional<User> optionalUser = userRepository.findById(id);
 
         if (optionalUser.isEmpty()) {
             log.warn("User with ID {} not found", id);
-            return new ResponseVO("Error", "User Not Found", null);
+            ResponseVO response = new ResponseVO("Error", "User Not Found", null, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
         User existingUser = optionalUser.get();
@@ -99,6 +105,8 @@ public class AdminService {
         userRepository.save(existingUser);
         log.info("User successfully updated: {}", existingUser);
 
-        return new ResponseVO("Status", "User Updated Successfully", existingUser);
+        ResponseVO response = new ResponseVO("Status", "User Updated Successfully", existingUser, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
+

@@ -19,7 +19,7 @@ public class AdminController {
 
     @GetMapping("/users")
     @ResponseBody
-    public ResponseVO adminView() {
+    public ResponseEntity<ResponseVO> adminView() {
         return adminService.findAllUser();
     }
 
@@ -28,28 +28,33 @@ public class AdminController {
 
     @PostMapping("/login")
     @ResponseBody
-    public ResponseEntity<ResponseVO> adminLogin(@RequestParam String name, @RequestParam String password) {
+    public ResponseEntity<ResponseVO> adminLogin(@RequestParam String name, @RequestParam String password)
+    {
         name = name.toLowerCase();
         if ("admin".equals(name) && adminPassword.equals(password)) {
-            return new ResponseEntity<>(createResponse("Success", "Admin logged in successfully"), HttpStatus.OK);
+            return createResponse("Success", "Admin logged in successfully", HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(createResponse("Error", "Invalid credentials"), HttpStatus.BAD_REQUEST);
+            return createResponse("Error", "Invalid credentials", HttpStatus.BAD_REQUEST);
         }
     }
 
-    private ResponseVO createResponse(String status, String message) {
-        return new ResponseVO(status, message, null);
+    private ResponseEntity<ResponseVO> createResponse(String status, String message, HttpStatus httpStatus)
+    {
+        ResponseVO responseVO = new ResponseVO(status, message, null, httpStatus);
+        return new ResponseEntity<>(responseVO, httpStatus);
     }
 
     @PostMapping("/update/{id}")
     @ResponseBody
-    public ResponseVO updateUser(@PathVariable(value = "id") long id,@Valid @RequestBody AdminUpdateDto adminUpdateDto) {
+    public ResponseEntity<ResponseVO> updateUser(@PathVariable(value = "id") long id,@Valid @RequestBody AdminUpdateDto adminUpdateDto)
+    {
         return adminService.userUpdate(adminUpdateDto,id);
     }
 
     @PostMapping("/delete/{id}")
     @ResponseBody
-    public ResponseVO deleteUser(@PathVariable(value = "id") long id) {
+    public ResponseEntity<ResponseVO> deleteUser(@PathVariable(value = "id") long id)
+    {
         return adminService.deleteUser(id);
     }
 }

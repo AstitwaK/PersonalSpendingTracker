@@ -7,6 +7,8 @@ import com.PersonalSpendingTracker.repository.ExpenseRepository;
 import com.PersonalSpendingTracker.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -19,6 +21,7 @@ import java.util.*;
 @Service
 @Slf4j
 public class ExpenseService {
+
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -48,7 +51,7 @@ public class ExpenseService {
     }
 
     // Main method for finding all expenses, optionally filtering by date range
-    public ResponseVO findAllExpenses(String userName, String startDateStr, String endDateStr) {
+    public ResponseEntity<ResponseVO> findAllExpenses(String userName, String startDateStr, String endDateStr) {
         User user = getByName(userName);
 
         try {
@@ -78,32 +81,38 @@ public class ExpenseService {
             responseData.put("expenses", expenses);
             responseData.put("totalExpense", totalExpense);
 
-            return new ResponseVO("Success", (startDate != null && endDate != null) ?
-                    "Expenses list found by Date" : "Expenses list found", responseData);
+            ResponseVO responseVO = new ResponseVO("Success", (startDate != null && endDate != null) ?
+                    "Expenses list found by Date" : "Expenses list found", responseData, HttpStatus.OK);
+
+            return ResponseEntity.ok(responseVO);
 
         } catch (DateTimeParseException e) {
             log.error("Invalid date format: startDate={}, endDate={}", startDateStr, endDateStr, e);
-            return new ResponseVO("Error", "Invalid date format. Expected yyyy-M-dd", null);
+            ResponseVO responseVO = new ResponseVO("Error", "Invalid date format. Expected yyyy-M-dd", null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(responseVO);
         } catch (Exception e) {
             log.error("Unexpected error retrieving expenses: {}", e.getMessage());
-            return new ResponseVO("Error", "An unexpected error occurred", null);
+            ResponseVO responseVO = new ResponseVO("Error", "An unexpected error occurred", null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseVO);
         }
     }
 
     // Method to delete expense by ID
-    public ResponseVO deleteById(Long id) {
+    public ResponseEntity<ResponseVO> deleteById(Long id) {
         if (!expenseRepository.existsById(id)) {
             log.warn("Attempted to delete a non-existent expense with ID {}", id);
-            return new ResponseVO("Error", "Expense not found", null);
+            ResponseVO responseVO = new ResponseVO("Error", "Expense not found", null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(responseVO);
         }
 
         expenseRepository.deleteById(id);
         log.info("Successfully deleted expense with ID {}", id);
-        return new ResponseVO("Success", "Expense Deleted", null);
+        ResponseVO responseVO = new ResponseVO("Success", "Expense Deleted", null, HttpStatus.OK);
+        return ResponseEntity.ok(responseVO);
     }
 
     // Method to add a new expense
-    public ResponseVO addExpense(String expName, String date, String costOfExp, String quantity) {
+    public ResponseEntity<ResponseVO> addExpense(String expName, String date, String costOfExp, String quantity) {
         try {
             User user = getByName(expName);
             float cost = Float.parseFloat(costOfExp);
@@ -120,26 +129,31 @@ public class ExpenseService {
             expenseRepository.save(expense);
 
             log.info("Expense successfully added: {}", expense);
-            return new ResponseVO("Success", "Expense Added", expense);
+            ResponseVO responseVO = new ResponseVO("Success", "Expense Added", expense, HttpStatus.OK);
+            return ResponseEntity.ok(responseVO);
         } catch (NumberFormatException e) {
             log.error("Invalid cost or quantity format: {}, {}", costOfExp, quantity, e);
-            return new ResponseVO("Error", "Invalid cost or quantity format", null);
+            ResponseVO responseVO = new ResponseVO("Error", "Invalid cost or quantity format", null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(responseVO);
         } catch (DateTimeParseException e) {
             log.error("Invalid date format: {}", date, e);
-            return new ResponseVO("Error", "Invalid date format. Expected yyyy-M-dd", null);
+            ResponseVO responseVO = new ResponseVO("Error", "Invalid date format. Expected yyyy-M-dd", null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(responseVO);
         } catch (Exception e) {
             log.error("Unexpected error while adding expense: {}", e.getMessage());
-            return new ResponseVO("Error", "An unexpected error occurred", null);
+            ResponseVO responseVO = new ResponseVO("Error", "An unexpected error occurred", null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseVO);
         }
     }
 
     // Method to update an existing expense
-    public ResponseVO updateExpense(Long id, String expName, String expDate, String expCost, String expQuantity, Instant createdTimestamp) {
+    public ResponseEntity<ResponseVO> updateExpense(Long id, String expName, String expDate, String expCost, String expQuantity, Instant createdTimestamp) {
         Optional<Expense> optionalExpense = expenseRepository.findById(id);
 
         if (optionalExpense.isEmpty()) {
             log.warn("Attempted to update a non-existent expense with ID {}", id);
-            return new ResponseVO("Error", "Expense not found", null);
+            ResponseVO responseVO = new ResponseVO("Error", "Expense not found", null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(responseVO);
         }
 
         Expense expense = optionalExpense.get();
@@ -162,11 +176,12 @@ public class ExpenseService {
 
             expenseRepository.save(expense);
             log.info("Expense updated successfully: {}", expense);
-            return new ResponseVO("Success", "Expense Updated", expense);
+            ResponseVO responseVO = new ResponseVO("Success", "Expense Updated", expense, HttpStatus.OK);
+            return ResponseEntity.ok(responseVO);
         } catch (Exception e) {
             log.error("Error updating expense with ID {}: {}", id, e.getMessage());
-            return new ResponseVO("Error", "Invalid input data", null);
+            ResponseVO responseVO = new ResponseVO("Error", "Invalid input data", null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseVO);
         }
     }
 }
-

@@ -1,7 +1,7 @@
 package com.PersonalSpendingTracker.dto;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.stereotype.Component;
@@ -13,12 +13,15 @@ import java.time.Instant;
 @Component
 public class AdminUpdateDto {
 
-        @NotEmpty(message = "Username cannot be empty")
+        @NotNull(message = "UserName cannot be null")
+        @Size(min = 3, max = 30, message = "UserName must be between 3 and 30 characters")
         private String userName;
 
-        @Email(message = "Invalid email format")
+        @Email(message = "Email should be valid")
         private String email;
 
+        @NotNull(message = "Password cannot be null")
+        @Size(min = 6, message = "Password must be at least 6 characters")
         private String password;
 
         @Size(min = 7, max = 15, message = "Phone number must be between 7 and 15 characters")
