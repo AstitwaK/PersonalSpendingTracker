@@ -30,7 +30,7 @@ public class UserController {
 
     @PostMapping("/forgot")
     @ResponseBody
-    public ResponseVO forgotPasswordView(@RequestParam String phone) {
+    public ResponseVO forgotPassword(@RequestParam String phone) {
         return userService.forgotPassword(phone);
     }
 

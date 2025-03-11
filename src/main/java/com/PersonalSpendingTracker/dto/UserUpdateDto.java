@@ -1,17 +1,9 @@
 package com.PersonalSpendingTracker.dto;
 
-import jakarta.persistence.Column;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.*;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Component

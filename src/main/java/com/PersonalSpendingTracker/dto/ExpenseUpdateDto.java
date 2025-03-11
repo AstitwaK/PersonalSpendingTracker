@@ -1,15 +1,10 @@
 package com.PersonalSpendingTracker.dto;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import lombok.*;
 import org.springframework.stereotype.Component;
-
 import java.time.Instant;
-import java.util.Date;
 
-@Setter
-@Getter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Component

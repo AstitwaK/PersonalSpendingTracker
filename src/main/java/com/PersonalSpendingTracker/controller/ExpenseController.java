@@ -16,27 +16,28 @@ public class ExpenseController {
 
     @GetMapping("/{name}")
     @ResponseBody
-    public ResponseVO dashboardview(@PathVariable(value = "name") String userName, @RequestParam(value = "startDate", required = false) String startDateStr,
+    public ResponseVO dashboardView(@PathVariable(value = "name") String userName,
+                                    @RequestParam(value = "startDate", required = false) String startDateStr,
                                     @RequestParam(value = "endDate", required = false) String endDateStr){
         return expenseService.findAllExpenses(userName,startDateStr,endDateStr);
     }
 
     @PostMapping("/{name}/add")
     @ResponseBody
-    public ResponseVO addexpense(@PathVariable(value = "name") String userName,@RequestBody ExpenseUpdateDto expenseUpdateDto) {
-        return expenseService.addById(expenseUpdateDto.getExpName(), expenseUpdateDto.getDate(), expenseUpdateDto.getCostOfExp(), expenseUpdateDto.getQuantity());
+    public ResponseVO addExpense(@PathVariable(value = "name") String userName, @RequestBody ExpenseUpdateDto expenseUpdateDto) {
+        return expenseService.addExpense(expenseUpdateDto.getExpName(), expenseUpdateDto.getDate(), expenseUpdateDto.getCostOfExp(), expenseUpdateDto.getQuantity());
     }
 
     @PostMapping("/update/{id}")
     @ResponseBody
     public ResponseVO updateForm(@PathVariable(value = "id") long id,@RequestBody ExpenseUpdateDto expenseUpdateDto) {
-        return expenseService.updateById(id,expenseUpdateDto.getExpName(), expenseUpdateDto.getDate(),
+        return expenseService.updateExpense(id,expenseUpdateDto.getExpName(), expenseUpdateDto.getDate(),
                 expenseUpdateDto.getCostOfExp(), expenseUpdateDto.getQuantity(),expenseUpdateDto.getCreatedTimestamp());
     }
 
     @PostMapping("/delete/{id}")
     @ResponseBody
-    public ResponseVO deleteThroughId(@PathVariable(value = "id") long id) {
+    public ResponseVO deleteById(@PathVariable(value = "id") long id) {
         return expenseService.deleteById(id);
     }
 }

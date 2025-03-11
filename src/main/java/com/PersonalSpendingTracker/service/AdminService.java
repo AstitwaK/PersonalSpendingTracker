@@ -5,9 +5,11 @@ import com.PersonalSpendingTracker.VO.UserVO;
 import com.PersonalSpendingTracker.dto.AdminUpdateDto;
 import com.PersonalSpendingTracker.model.User;
 import com.PersonalSpendingTracker.repository.UserRepository;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@Validated
 public class AdminService {
     @Autowired
     private UserRepository userRepository;
@@ -65,14 +68,16 @@ public class AdminService {
     /*TODO
     *   1. Apply all the validations using spring annotation e.g. @Valid
     * */
-    public ResponseVO userUpdate(AdminUpdateDto adminUpdateDto, Long id){
+    public ResponseVO userUpdate(@Valid AdminUpdateDto adminUpdateDto, Long id) {
         Optional<User> optionalUser = userRepository.findById(id);
 
         if (optionalUser.isEmpty()) {
             log.warn("User with ID {} not found", id);
             return new ResponseVO("Error", "User Not Found", null);
         }
+
         User existingUser = optionalUser.get();
+
         // Update only non-null fields
         if (adminUpdateDto.getUserName() != null) {
             existingUser.setUserName(adminUpdateDto.getUserName());
@@ -90,8 +95,10 @@ public class AdminService {
         if (adminUpdateDto.getCreatedTimestamp() != null) {
             existingUser.setCreatedTimestamp(adminUpdateDto.getCreatedTimestamp());
         }
+
         userRepository.save(existingUser);
         log.info("User successfully updated: {}", existingUser);
+
         return new ResponseVO("Status", "User Updated Successfully", existingUser);
     }
 }

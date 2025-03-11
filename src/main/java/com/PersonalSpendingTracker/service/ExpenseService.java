@@ -24,21 +24,30 @@ public class ExpenseService {
     @Autowired
     private ExpenseRepository expenseRepository;
 
-    public User getByName(String userName){
-        Optional<User> optional = userRepository.findActiveUserByUserName(userName);
-        User user = null;
-        if(optional.isPresent())
-            user = optional.get();
-        else
-            throw new RuntimeException(
-                    "User not found for id: " + userName);
-        return user;
+    // Method to fetch user by username
+    public User getByName(String userName) {
+        return userRepository.findActiveUserByUserName(userName)
+                .orElseThrow(() -> new RuntimeException("User not found for id: " + userName));
     }
 
+    // Fetch expenses for the given user
     public List<Expense> findAllExpenses(User user) {
-        return expenseRepository.findByuser(user);
+        return expenseRepository.findByUser(user.getId());
     }
 
+    // Method to handle getting expenses by date range
+    public List<Expense> getExpensesByDateRange(Date startDate, Date endDate, User user) {
+        return expenseRepository.findByDateBetweenAndUser(startDate, endDate, user.getId());
+    }
+
+    // Method to calculate the total expense
+    public double calculateTotalExpense(List<Expense> expenses) {
+        return expenses.stream()
+                .mapToDouble(expense -> expense.getCostOfExp() * expense.getQuantity())
+                .sum();
+    }
+
+    // Main method for finding all expenses, optionally filtering by date range
     public ResponseVO findAllExpenses(String userName, String startDateStr, String endDateStr) {
         User user = getByName(userName);
 
@@ -53,16 +62,16 @@ public class ExpenseService {
                     : null;
 
             List<Expense> expenses = (startDate != null && endDate != null)
-                    ? getExpensesByDateRange(Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant()),
-                    Date.from(endDate.atStartOfDay(ZoneId.systemDefault()).toInstant()), user)
+                    ? getExpensesByDateRange(
+                    Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant()),
+                    Date.from(endDate.atStartOfDay(ZoneId.systemDefault()).toInstant()),
+                    user)
                     : findAllExpenses(user);
 
             log.info("Expenses retrieved for user: {}", userName);
 
-            // Calculate total expense cost
-            double totalExpense = expenses.stream()
-                    .mapToDouble(expense -> expense.getCostOfExp() * expense.getQuantity())
-                    .sum();
+            // Calculate total expense
+            double totalExpense = calculateTotalExpense(expenses);
 
             // Create a response map
             Map<String, Object> responseData = new HashMap<>();
@@ -81,19 +90,20 @@ public class ExpenseService {
         }
     }
 
-
+    // Method to delete expense by ID
     public ResponseVO deleteById(Long id) {
         if (!expenseRepository.existsById(id)) {
-            log.warn("Attempted to delete a non-existent entity with ID {}", id);
-            return new ResponseVO("Error", "Product not found", null);
+            log.warn("Attempted to delete a non-existent expense with ID {}", id);
+            return new ResponseVO("Error", "Expense not found", null);
         }
 
         expenseRepository.deleteById(id);
-        log.info("Successfully deleted product with ID {}", id);
-        return new ResponseVO("Success", "Product Deleted", null);
+        log.info("Successfully deleted expense with ID {}", id);
+        return new ResponseVO("Success", "Expense Deleted", null);
     }
 
-    public ResponseVO addById(String expName, String date, String costOfExp, String quantity) {
+    // Method to add a new expense
+    public ResponseVO addExpense(String expName, String date, String costOfExp, String quantity) {
         try {
             User user = getByName(expName);
             float cost = Float.parseFloat(costOfExp);
@@ -123,8 +133,8 @@ public class ExpenseService {
         }
     }
 
-
-    public ResponseVO updateById(Long id, String expName, String expDate, String expCost, String expQuantity, Instant createdTimestamp) {
+    // Method to update an existing expense
+    public ResponseVO updateExpense(Long id, String expName, String expDate, String expCost, String expQuantity, Instant createdTimestamp) {
         Optional<Expense> optionalExpense = expenseRepository.findById(id);
 
         if (optionalExpense.isEmpty()) {
@@ -158,8 +168,5 @@ public class ExpenseService {
             return new ResponseVO("Error", "Invalid input data", null);
         }
     }
-
-    public List<Expense> getExpensesByDateRange(Date startDate, Date endDate,User user) {
-        return expenseRepository.findByDateBetweenAndUser(startDate, endDate,user);
-    }
 }
+

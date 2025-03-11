@@ -3,6 +3,7 @@ package com.PersonalSpendingTracker.controller;
 import com.PersonalSpendingTracker.VO.ResponseVO;
 import com.PersonalSpendingTracker.dto.AdminUpdateDto;
 import com.PersonalSpendingTracker.service.AdminService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -42,14 +43,10 @@ public class AdminController {
 
     @PostMapping("/update/{id}")
     @ResponseBody
-    public ResponseVO updateUser(@PathVariable(value = "id") long id, @RequestBody AdminUpdateDto adminUpdateDto) {
+    public ResponseVO updateUser(@PathVariable(value = "id") long id,@Valid @RequestBody AdminUpdateDto adminUpdateDto) {
         return adminService.userUpdate(adminUpdateDto,id);
     }
 
-    /* TODO
-     *   1. deleteThroughId  rename to deleteUser
-     *   2. deactivateById rename to deleteUser
-     * */
     @PostMapping("/delete/{id}")
     @ResponseBody
     public ResponseVO deleteUser(@PathVariable(value = "id") long id) {
