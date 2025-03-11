@@ -28,13 +28,13 @@ public class AdminService {
 
     public ResponseVO findAllUser() {
         List<UserVO> userVOList = userRepository.getAllActiveUsers().stream()
-                .map(this::convertToUserVO)
+                .map(this::instantiateUserVO)
                 .collect(Collectors.toList());
 
         return new ResponseVO("Success", "List of all users", userVOList);
     }
 
-    private UserVO convertToUserVO(User user) {
+    private UserVO instantiateUserVO(User user) {
         return new UserVO(
                 user.getId(),
                 user.getUserName(),
@@ -62,6 +62,9 @@ public class AdminService {
                 });
     }
 
+    /*TODO
+    *   1. Apply all the validations using spring annotation e.g. @Valid
+    * */
     public ResponseVO userUpdate(AdminUpdateDto adminUpdateDto, Long id){
         Optional<User> optionalUser = userRepository.findById(id);
 

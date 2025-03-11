@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -17,42 +16,36 @@ public class UserService {
     private UserRepository userRepository;
 
     /*TODO
-     *  1. create a separate method to instantiate the response vo and use it
-     *  2. Enhance the logic and try to write in minimum conditions
      *  3. check how to encode and decode using key
      * */
     public ResponseVO login(String name, String password) {
-        return userRepository.findByUsernameAndStatusTrue(name)
+        return userRepository.findActiveUserByUserName(name)
                 .map(user -> validatePassword(user, password))
-                .orElseGet(() -> createResponse("Error", "User name not found or user is removed", null));
+                .orElseGet(() -> instantiateResponseVO("Error", "User name not found", null));
     }
 
     private ResponseVO validatePassword(User user, String password) {
         String decodedPassword = decodeBase64(user.getPassword());
         if (decodedPassword.equals(password)) {
             log.info("User successfully Logged In");
-            return createResponse("Success", "User successfully Logged In", user);
+            return instantiateResponseVO("Success", "User successfully Logged In", user);
         }
         log.error("User entered wrong password");
-        return createResponse("Error", "User entered wrong password", null);
+        return instantiateResponseVO("Error", "User entered wrong password", null);
     }
 
     private String decodeBase64(String encodedString) {
         return new String(Base64.getDecoder().decode(encodedString));
     }
 
-    private ResponseVO createResponse(String status, String message, Object data) {
+    private ResponseVO instantiateResponseVO(String status, String message, Object data) {
         return new ResponseVO(status, message, data);
     }
 
-    /*TODO
-     *  1. userRepository.findByUserNameAndStatusTrue(name).isPresent() || userRepository.findByemail(email).isPresent()
-     *   -> write a native query to validate both the use case in a single method
-     * */
     public ResponseVO register(String name, String email, String password, String phone) {
-        if (userRepository.findByUsernameOrEmailAndStatusTrue(name, email).isPresent()) {
+        if (userRepository.findActiveUserByUserNameAndEmail(name, email).isPresent()) {
             log.error("User Name or email already exists");
-            return createResponse("Error", "User Name or email already exists", null);
+            return instantiateResponseVO("Error", "User Name or email already exists", null);
         }
 
         String encodedPassword = Base64.getEncoder().encodeToString(password.getBytes());
@@ -67,7 +60,7 @@ public class UserService {
 
         userRepository.save(user);
         log.info("User successfully registered");
-        return createResponse("Success", "User successfully registered", user);
+        return instantiateResponseVO("Success", "User successfully registered", user);
     }
 
     public ResponseVO passwordChange(Long id,String password){

@@ -1,7 +1,6 @@
 package com.PersonalSpendingTracker.service;
 
 import com.PersonalSpendingTracker.VO.ResponseVO;
-import com.PersonalSpendingTracker.dto.ExpenseUpdateDto;
 import com.PersonalSpendingTracker.model.Expense;
 import com.PersonalSpendingTracker.model.User;
 import com.PersonalSpendingTracker.repository.ExpenseRepository;
@@ -10,8 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -28,7 +25,7 @@ public class ExpenseService {
     private ExpenseRepository expenseRepository;
 
     public User getByName(String userName){
-        Optional<User> optional = userRepository.findByUsernameAndStatusTrue(userName);
+        Optional<User> optional = userRepository.findActiveUserByUserName(userName);
         User user = null;
         if(optional.isPresent())
             user = optional.get();
