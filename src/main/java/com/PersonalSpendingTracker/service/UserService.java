@@ -17,10 +17,6 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    /*TODO
-    *  1.   .map(user -> validatePassword(user, password)) separate out this logic. It should validate the password only.
-    *       success response logic should be written in login method only not in validatePassword.
-    * */
     public ResponseEntity<ResponseVO> login(String name, String password) {
         return userRepository.findActiveUserByUserName(name)
                 .map(user -> {

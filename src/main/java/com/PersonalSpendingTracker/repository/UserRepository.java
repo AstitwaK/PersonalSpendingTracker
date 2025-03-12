@@ -18,9 +18,9 @@ public interface UserRepository extends CrudRepository<User, Long>
     @Query(value = "SELECT * FROM pst_user WHERE phone = :phone", nativeQuery = true)
     Optional<User> findByPhone(@Param("phone") String phone);
 
-    @Query(value = "SELECT * FROM pst_user WHERE (username = :userName OR email = :email) AND status = true", nativeQuery = true)
+    @Query(value = "SELECT * FROM pst_user WHERE (user_name = :userName OR email = :email) AND status = true", nativeQuery = true)
     Optional<User> findActiveUserByUserNameAndEmail(@Param("userName") String userName, @Param("email") String email);
 
-    @Query(value = "SELECT * FROM pst_user WHERE username = :userName AND status = true", nativeQuery = true)
+    @Query(value = "SELECT * FROM pst_user WHERE user_name = :userName AND status = true", nativeQuery = true)
     Optional<User> findActiveUserByUserName(@Param("userName") String userName);
 }

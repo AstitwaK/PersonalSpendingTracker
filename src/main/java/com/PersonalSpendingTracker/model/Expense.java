@@ -13,6 +13,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Expense {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,7 +23,7 @@ public class Expense {
     @Column(name = "exp_date")
     private Date date;
     @Column(name = "exp_cost")
-    private float costOfExp;
+    private double costOfExp;
     @Column(name = "exp_quantity")
     private int quantity;
     @CreationTimestamp

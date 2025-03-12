@@ -40,7 +40,7 @@ public class AdminController {
 
     private ResponseEntity<ResponseVO> createResponse(String status, String message, HttpStatus httpStatus)
     {
-        ResponseVO responseVO = new ResponseVO(status, message, null, httpStatus);
+        ResponseVO responseVO = new ResponseVO(status, message, null);
         return new ResponseEntity<>(responseVO, httpStatus);
     }
 

@@ -1,6 +1,7 @@
 package com.PersonalSpendingTracker.service;
 
 import com.PersonalSpendingTracker.VO.ResponseVO;
+import com.PersonalSpendingTracker.dto.ExpenseUpdateDto;
 import com.PersonalSpendingTracker.model.Expense;
 import com.PersonalSpendingTracker.model.User;
 import com.PersonalSpendingTracker.repository.ExpenseRepository;
@@ -10,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -24,45 +23,38 @@ public class ExpenseService {
 
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private ExpenseRepository expenseRepository;
 
-    // Method to fetch user by username
+    @Autowired
+    private ExpenseUpdateDto expenseUpdateDto;
+
     public User getByName(String userName) {
         return userRepository.findActiveUserByUserName(userName)
-                .orElseThrow(() -> new RuntimeException("User not found for id: " + userName));
+                .orElseThrow(() -> new RuntimeException("User not found for username: " + userName));
     }
 
-    // Fetch expenses for the given user
     public List<Expense> findAllExpenses(User user) {
         return expenseRepository.findByUser(user.getId());
     }
 
-    // Method to handle getting expenses by date range
     public List<Expense> getExpensesByDateRange(Date startDate, Date endDate, User user) {
         return expenseRepository.findByDateBetweenAndUser(startDate, endDate, user.getId());
     }
 
-    // Method to calculate the total expense
     public double calculateTotalExpense(List<Expense> expenses) {
         return expenses.stream()
                 .mapToDouble(expense -> expense.getCostOfExp() * expense.getQuantity())
                 .sum();
     }
 
-    // Main method for finding all expenses, optionally filtering by date range
     public ResponseEntity<ResponseVO> findAllExpenses(String userName, String startDateStr, String endDateStr) {
         User user = getByName(userName);
 
         try {
-            // Parse dates safely
-            LocalDate startDate = (startDateStr != null && !startDateStr.isBlank())
-                    ? LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("yyyy-M-dd"))
-                    : null;
-
-            LocalDate endDate = (endDateStr != null && !endDateStr.isBlank())
-                    ? LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("yyyy-M-dd"))
-                    : null;
+            LocalDate startDate = parseDate(startDateStr);
+            LocalDate endDate = parseDate(endDateStr);
 
             List<Expense> expenses = (startDate != null && endDate != null)
                     ? getExpensesByDateRange(
@@ -73,117 +65,102 @@ public class ExpenseService {
 
             log.info("Expenses retrieved for user: {}", userName);
 
-            // Calculate total expense
-            double totalExpense = calculateTotalExpense(expenses);
-
-            // Create a response map
             Map<String, Object> responseData = new HashMap<>();
             responseData.put("expenses", expenses);
-            responseData.put("totalExpense", totalExpense);
+            responseData.put("totalExpense", calculateTotalExpense(expenses));
 
             ResponseVO responseVO = new ResponseVO("Success", (startDate != null && endDate != null) ?
                     "Expenses list found by Date" : "Expenses list found", responseData);
 
             return ResponseEntity.ok(responseVO);
-
         } catch (DateTimeParseException e) {
-            log.error("Invalid date format: startDate={}, endDate={}", startDateStr, endDateStr, e);
-            ResponseVO responseVO = new ResponseVO("Error", "Invalid date format. Expected yyyy-M-dd", null);
-            return ResponseEntity.badRequest().body(responseVO);
+            return handleDateError(startDateStr, endDateStr, e);
         } catch (Exception e) {
-            log.error("Unexpected error retrieving expenses: {}", e.getMessage());
-            ResponseVO responseVO = new ResponseVO("Error", "An unexpected error occurred", null);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseVO);
+            return handleUnexpectedError(e);
         }
     }
 
-    // Method to delete expense by ID
     public ResponseEntity<ResponseVO> deleteById(Long id) {
         if (!expenseRepository.existsById(id)) {
             log.warn("Attempted to delete a non-existent expense with ID {}", id);
-            ResponseVO responseVO = new ResponseVO("Error", "Expense not found", null);
-            return ResponseEntity.badRequest().body(responseVO);
+            return ResponseEntity.badRequest().body(new ResponseVO("Error", "Expense not found", null));
         }
 
         expenseRepository.deleteById(id);
         log.info("Successfully deleted expense with ID {}", id);
-        ResponseVO responseVO = new ResponseVO("Success", "Expense Deleted", null);
-        return ResponseEntity.ok(responseVO);
+        return ResponseEntity.ok(new ResponseVO("Success", "Expense Deleted", null));
     }
 
-    // Method to add a new expense
-    public ResponseEntity<ResponseVO> addExpense(String expName, String date, String costOfExp, String quantity) {
+    public ResponseEntity<ResponseVO> addExpense(String userName, ExpenseUpdateDto expenseDTO) {
         try {
-            User user = getByName(expName);
-            float cost = Float.parseFloat(costOfExp);
-            int quant = Integer.parseInt(quantity);
-
-            // Parse date safely
-            LocalDate parsedDate = (date == null || date.isBlank())
-                    ? LocalDate.of(2000, 1, 1)  // Fallback date
-                    : LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-M-dd"));
-
+            User user = getByName(userName);
+            LocalDate parsedDate = parseDate(expenseDTO.getDate());
             Date expDate = Date.from(parsedDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-            /*TODO
-            *  1. why you are not using @Builder here ? You don't need to put the null.*/
-            Expense expense = new Expense(null, expName, expDate, cost, quant, null, null, user);
-            expenseRepository.save(expense);
+            Expense expense = Expense.builder()
+                    .expName(expenseDTO.getExpName())
+                    .date(expDate)
+                    .costOfExp(expenseDTO.getCostOfExp())
+                    .quantity(expenseDTO.getQuantity())
+                    .user(user)
+                    .build();
 
+            expenseRepository.save(expense);
             log.info("Expense successfully added: {}", expense);
-            ResponseVO responseVO = new ResponseVO("Success", "Expense Added", expense);
-            return ResponseEntity.ok(responseVO);
+            return ResponseEntity.ok(new ResponseVO("Success", "Expense Added", expense));
         } catch (NumberFormatException e) {
-            log.error("Invalid cost or quantity format: {}, {}", costOfExp, quantity, e);
-            ResponseVO responseVO = new ResponseVO("Error", "Invalid cost or quantity format", null);
-            return ResponseEntity.badRequest().body(responseVO);
+            return handleNumberError(expenseDTO.getCostOfExp(), expenseDTO.getQuantity(), e);
         } catch (DateTimeParseException e) {
-            log.error("Invalid date format: {}", date, e);
-            ResponseVO responseVO = new ResponseVO("Error", "Invalid date format. Expected yyyy-M-dd", null);
-            return ResponseEntity.badRequest().body(responseVO);
+            return handleDateError(expenseDTO.getDate(), null, e);
         } catch (Exception e) {
-            log.error("Unexpected error while adding expense: {}", e.getMessage());
-            ResponseVO responseVO = new ResponseVO("Error", "An unexpected error occurred", null);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseVO);
+            return handleUnexpectedError(e);
         }
     }
 
-    // Method to update an existing expense
-    public ResponseEntity<ResponseVO> updateExpense(Long id, String expName, String expDate, String expCost, String expQuantity, Instant createdTimestamp) {
+    public ResponseEntity<ResponseVO> updateExpense(Long id, ExpenseUpdateDto expenseDTO) {
         Optional<Expense> optionalExpense = expenseRepository.findById(id);
-
         if (optionalExpense.isEmpty()) {
-            log.warn("Attempted to update a non-existent expense with ID {}", id);
-            ResponseVO responseVO = new ResponseVO("Error", "Expense not found", null);
-            return ResponseEntity.badRequest().body(responseVO);
+            return ResponseEntity.badRequest().body(new ResponseVO("Error", "Expense not found", null));
         }
 
         Expense expense = optionalExpense.get();
-        User user = expense.getUser();
-
         try {
-            float cost = expCost != null ? Float.parseFloat(expCost) : expense.getCostOfExp();
-            int quantity = expQuantity != null ? Integer.parseInt(expQuantity) : expense.getQuantity();
+            double cost = (expenseDTO.getCostOfExp() != null) ? expenseDTO.getCostOfExp() : expense.getCostOfExp();
+            int quantity = (expenseDTO.getQuantity() != null) ? expenseDTO.getQuantity() : expense.getQuantity();
+            LocalDate parsedDate = parseDate(expenseDTO.getDate());
 
-            LocalDate parsedDate = (expDate == null || expDate.isBlank())
-                    ? LocalDate.of(2000, 1, 1)
-                    : LocalDate.parse(expDate, DateTimeFormatter.ofPattern("yyyy-M-dd"));
-
-            // Update only if new values are provided
-            if (expName != null) expense.setExpName(expName);
-            if (expDate != null) expense.setDate(Date.from(parsedDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+            if (expenseDTO.getExpName() != null) expense.setExpName(expenseDTO.getExpName());
+            if (expenseDTO.getDate() != null) expense.setDate(Date.from(parsedDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
             expense.setCostOfExp(cost);
             expense.setQuantity(quantity);
-            if (createdTimestamp != null) expense.setCreatedTimestamp(createdTimestamp);
+            if (expenseDTO.getCreatedTimestamp() != null) expense.setCreatedTimestamp(expenseDTO.getCreatedTimestamp());
 
             expenseRepository.save(expense);
             log.info("Expense updated successfully: {}", expense);
-            ResponseVO responseVO = new ResponseVO("Success", "Expense Updated", expense);
-            return ResponseEntity.ok(responseVO);
+            return ResponseEntity.ok(new ResponseVO("Success", "Expense Updated", expense));
         } catch (Exception e) {
-            log.error("Error updating expense with ID {}: {}", id, e.getMessage());
-            ResponseVO responseVO = new ResponseVO("Error", "Invalid input data", null);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseVO);
+            return handleUnexpectedError(e);
         }
+    }
+
+    private LocalDate parseDate(String dateStr) {
+        return (dateStr == null || dateStr.isBlank())
+                ? LocalDate.of(2000, 1, 1)
+                : LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-M-dd"));
+    }
+
+    private ResponseEntity<ResponseVO> handleDateError(String startDateStr, String endDateStr, DateTimeParseException e) {
+        log.error("Invalid date format: startDate={}, endDate={}", startDateStr, endDateStr, e);
+        return ResponseEntity.badRequest().body(new ResponseVO("Error", "Invalid date format. Expected yyyy-M-dd", null));
+    }
+
+    private ResponseEntity<ResponseVO> handleNumberError(double costOfExp, int quantity, NumberFormatException e) {
+        log.error("Invalid cost or quantity format: {}, {}", costOfExp, quantity, e);
+        return ResponseEntity.badRequest().body(new ResponseVO("Error", "Invalid cost or quantity format", null));
+    }
+
+    private ResponseEntity<ResponseVO> handleUnexpectedError(Exception e) {
+        log.error("Unexpected error: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseVO("Error", "An unexpected error occurred", null));
     }
 }

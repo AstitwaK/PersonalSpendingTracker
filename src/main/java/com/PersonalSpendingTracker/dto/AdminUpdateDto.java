@@ -13,14 +13,12 @@ import java.time.Instant;
 @Component
 public class AdminUpdateDto {
 
-        @NotNull(message = "UserName cannot be null")
         @Size(min = 3, max = 30, message = "UserName must be between 3 and 30 characters")
         private String userName;
 
         @Email(message = "Email should be valid")
         private String email;
 
-        @NotNull(message = "Password cannot be null")
         @Size(min = 6, message = "Password must be at least 6 characters")
         private String password;
 

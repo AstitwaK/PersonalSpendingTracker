@@ -81,39 +81,24 @@ public class AdminService {
 
     // Method to update user details
     public ResponseEntity<ResponseVO> userUpdate(@Valid AdminUpdateDto adminUpdateDto, Long id) {
-        Optional<User> optionalUser = userRepository.findById(id);
+        return userRepository.findById(id)
+                .map(existingUser -> {
+                    Optional.ofNullable(adminUpdateDto.getUserName()).ifPresent(existingUser::setUserName);
+                    Optional.ofNullable(adminUpdateDto.getEmail()).ifPresent(existingUser::setEmail);
+                    Optional.ofNullable(adminUpdateDto.getPassword())
+                            .ifPresent(password -> existingUser.setPassword(Base64.getEncoder().encodeToString(password.getBytes())));
+                    Optional.ofNullable(adminUpdateDto.getPhone()).ifPresent(existingUser::setPhone);
+                    Optional.ofNullable(adminUpdateDto.getCreatedTimestamp()).ifPresent(existingUser::setCreatedTimestamp);
 
-        if (optionalUser.isEmpty()) {
-            log.warn("User with ID {} not found", id);
-            ResponseVO response = new ResponseVO("Error", "User Not Found", null);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
+                    userRepository.save(existingUser);
+                    log.info("User successfully updated: {}", existingUser);
 
-        User existingUser = optionalUser.get();
-
-        // Update only non-null fields
-        if (adminUpdateDto.getUserName() != null) {
-            existingUser.setUserName(adminUpdateDto.getUserName());
-        }
-        if (adminUpdateDto.getEmail() != null) {
-            existingUser.setEmail(adminUpdateDto.getEmail());
-        }
-        if (adminUpdateDto.getPassword() != null) {
-            String encodedPassword = Base64.getEncoder().encodeToString(adminUpdateDto.getPassword().getBytes());
-            existingUser.setPassword(encodedPassword);
-        }
-        if (adminUpdateDto.getPhone() != null) {
-            existingUser.setPhone(adminUpdateDto.getPhone());
-        }
-        if (adminUpdateDto.getCreatedTimestamp() != null) {
-            existingUser.setCreatedTimestamp(adminUpdateDto.getCreatedTimestamp());
-        }
-
-        userRepository.save(existingUser);
-        log.info("User successfully updated: {}", existingUser);
-
-        ResponseVO response = new ResponseVO("Status", "User Updated Successfully", existingUser);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+                    return ResponseEntity.ok(new ResponseVO("Status", "User Updated Successfully", existingUser));
+                })
+                .orElseGet(() -> {
+                    log.warn("User with ID {} not found", id);
+                    return ResponseEntity.badRequest().body(new ResponseVO("Error", "User Not Found", null));
+                });
     }
 }
 

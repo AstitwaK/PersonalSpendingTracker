@@ -1,17 +1,25 @@
 package com.PersonalSpendingTracker.dto;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
-import org.springframework.stereotype.Component;
 import java.time.Instant;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Component
 public class ExpenseUpdateDto {
+    @NotNull(message = "Expense name cannot be null")
     private String expName;
+
+    @NotNull(message = "Date cannot be null")
     private String date;
-    private String costOfExp;
-    private String quantity;
+
+    @Positive(message = "Cost should be greater than zero")
+    private Double costOfExp;
+
+    @Positive(message = "Quantity should be greater than zero")
+    private Integer quantity;
+
     private Instant createdTimestamp;
 }
