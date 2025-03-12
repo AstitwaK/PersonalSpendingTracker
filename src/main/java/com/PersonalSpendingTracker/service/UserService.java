@@ -23,33 +23,37 @@ public class UserService {
     * */
     public ResponseEntity<ResponseVO> login(String name, String password) {
         return userRepository.findActiveUserByUserName(name)
-                .map(user -> validatePassword(user, password))
+                .map(user -> {
+                    if (validatePassword(user, password)) {
+                        log.info("User successfully Logged In");
+                        ResponseVO response = instantiateResponseVO("Success", "User successfully Logged In", user);
+                        return new ResponseEntity<>(response, HttpStatus.OK);
+                    } else {
+                        log.error("User entered wrong password");
+                        ResponseVO response = instantiateResponseVO("Error", "User entered wrong password", null);
+                        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+                    }
+                })
                 .orElseGet(() -> {
                     ResponseVO response = instantiateResponseVO("Error", "User name not found", null);
                     return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                 });
     }
 
-    private ResponseEntity<ResponseVO> validatePassword(User user, String password) {
+    // Now validatePassword() only checks if the password matches and returns a boolean
+    private boolean validatePassword(User user, String password) {
         String decodedPassword = decodeBase64(user.getPassword());
-        if (decodedPassword.equals(password)) {
-            log.info("User successfully Logged In");
-            ResponseVO response = instantiateResponseVO("Success", "User successfully Logged In", user);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-        log.error("User entered wrong password");
-        ResponseVO response = instantiateResponseVO("Error", "User entered wrong password", null);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return decodedPassword.equals(password);
     }
 
     private ResponseVO instantiateResponseVO(String status, String message, Object data) {
         return new ResponseVO(status, message, data);
     }
 
-
     private String decodeBase64(String encodedString) {
         return new String(Base64.getDecoder().decode(encodedString));
     }
+
 
     public ResponseEntity<ResponseVO> register(String name, String email, String password, String phone) {
         if (userRepository.findActiveUserByUserNameAndEmail(name, email).isPresent()) {
