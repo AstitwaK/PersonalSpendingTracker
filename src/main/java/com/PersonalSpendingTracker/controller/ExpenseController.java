@@ -25,10 +25,16 @@ public class ExpenseController {
 
     @PostMapping("/{name}/add")
     @ResponseBody
+    /* TODO
+    *   1.  why userName is not getting used ? you are using expenseUpdateDto.getExpName() instead of user name
+    *   ExpenseUpdateDto -> read cost in double data type and quantity in integer
+    * */
     public ResponseEntity<ResponseVO> addExpense(@PathVariable(value = "name") String userName, @RequestBody ExpenseUpdateDto expenseUpdateDto) {
         return expenseService.addExpense(expenseUpdateDto.getExpName(), expenseUpdateDto.getDate(), expenseUpdateDto.getCostOfExp(), expenseUpdateDto.getQuantity());
     }
 
+    /*TODO
+    *  1. Why you're not apply validation on ExpenseUpdateDto using annotation ?*/
     @PostMapping("/update/{id}")
     @ResponseBody
     public ResponseEntity<ResponseVO> updateForm(@PathVariable(value = "id") long id,@RequestBody ExpenseUpdateDto expenseUpdateDto) {

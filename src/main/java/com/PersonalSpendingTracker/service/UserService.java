@@ -18,8 +18,9 @@ public class UserService {
     private UserRepository userRepository;
 
     /*TODO
-     *  3. check how to encode and decode using key
-     * */
+    *  1.   .map(user -> validatePassword(user, password)) separate out this logic. It should validate the password only.
+    *       success response logic should be written in login method only not in validatePassword.
+    * */
     public ResponseEntity<ResponseVO> login(String name, String password) {
         return userRepository.findActiveUserByUserName(name)
                 .map(user -> validatePassword(user, password))

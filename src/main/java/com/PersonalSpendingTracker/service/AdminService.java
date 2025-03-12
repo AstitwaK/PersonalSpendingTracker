@@ -72,6 +72,13 @@ public class AdminService {
                 });
     }
 
+    /*TODO
+    *   1. All the validations are being handled automatically using @VALID annotation.
+    *   Please remove below conditions which is starting from line 90
+    *  ---> Also read about @RestControllerAdvice and how to implement it.
+    *       It is used to handle the exception at controller level and return the response directly
+    * */
+
     // Method to update user details
     public ResponseEntity<ResponseVO> userUpdate(@Valid AdminUpdateDto adminUpdateDto, Long id) {
         Optional<User> optionalUser = userRepository.findById(id);

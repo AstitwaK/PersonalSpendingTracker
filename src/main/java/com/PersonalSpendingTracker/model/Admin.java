@@ -3,6 +3,10 @@ package com.PersonalSpendingTracker.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+/*TODO
+*  1. If you are not storing any Admin details in db, what it is the purpose of creating the entity and repository ?
+*   Admin and Admin Repository can be deleted*/
+
 @Entity
 @Table(name = "admin")
 @Data

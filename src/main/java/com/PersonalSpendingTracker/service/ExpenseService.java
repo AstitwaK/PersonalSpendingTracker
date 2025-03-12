@@ -125,6 +125,8 @@ public class ExpenseService {
 
             Date expDate = Date.from(parsedDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
+            /*TODO
+            *  1. why you are not using @Builder here ? You don't need to put the null.*/
             Expense expense = new Expense(null, expName, expDate, cost, quant, null, null, user);
             expenseRepository.save(expense);
 
