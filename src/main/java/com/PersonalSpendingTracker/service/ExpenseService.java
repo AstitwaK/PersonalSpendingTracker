@@ -82,17 +82,17 @@ public class ExpenseService {
             responseData.put("totalExpense", totalExpense);
 
             ResponseVO responseVO = new ResponseVO("Success", (startDate != null && endDate != null) ?
-                    "Expenses list found by Date" : "Expenses list found", responseData, HttpStatus.OK);
+                    "Expenses list found by Date" : "Expenses list found", responseData);
 
             return ResponseEntity.ok(responseVO);
 
         } catch (DateTimeParseException e) {
             log.error("Invalid date format: startDate={}, endDate={}", startDateStr, endDateStr, e);
-            ResponseVO responseVO = new ResponseVO("Error", "Invalid date format. Expected yyyy-M-dd", null, HttpStatus.BAD_REQUEST);
+            ResponseVO responseVO = new ResponseVO("Error", "Invalid date format. Expected yyyy-M-dd", null);
             return ResponseEntity.badRequest().body(responseVO);
         } catch (Exception e) {
             log.error("Unexpected error retrieving expenses: {}", e.getMessage());
-            ResponseVO responseVO = new ResponseVO("Error", "An unexpected error occurred", null, HttpStatus.BAD_REQUEST);
+            ResponseVO responseVO = new ResponseVO("Error", "An unexpected error occurred", null);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseVO);
         }
     }
@@ -101,13 +101,13 @@ public class ExpenseService {
     public ResponseEntity<ResponseVO> deleteById(Long id) {
         if (!expenseRepository.existsById(id)) {
             log.warn("Attempted to delete a non-existent expense with ID {}", id);
-            ResponseVO responseVO = new ResponseVO("Error", "Expense not found", null, HttpStatus.BAD_REQUEST);
+            ResponseVO responseVO = new ResponseVO("Error", "Expense not found", null);
             return ResponseEntity.badRequest().body(responseVO);
         }
 
         expenseRepository.deleteById(id);
         log.info("Successfully deleted expense with ID {}", id);
-        ResponseVO responseVO = new ResponseVO("Success", "Expense Deleted", null, HttpStatus.OK);
+        ResponseVO responseVO = new ResponseVO("Success", "Expense Deleted", null);
         return ResponseEntity.ok(responseVO);
     }
 
@@ -131,19 +131,19 @@ public class ExpenseService {
             expenseRepository.save(expense);
 
             log.info("Expense successfully added: {}", expense);
-            ResponseVO responseVO = new ResponseVO("Success", "Expense Added", expense, HttpStatus.OK);
+            ResponseVO responseVO = new ResponseVO("Success", "Expense Added", expense);
             return ResponseEntity.ok(responseVO);
         } catch (NumberFormatException e) {
             log.error("Invalid cost or quantity format: {}, {}", costOfExp, quantity, e);
-            ResponseVO responseVO = new ResponseVO("Error", "Invalid cost or quantity format", null, HttpStatus.BAD_REQUEST);
+            ResponseVO responseVO = new ResponseVO("Error", "Invalid cost or quantity format", null);
             return ResponseEntity.badRequest().body(responseVO);
         } catch (DateTimeParseException e) {
             log.error("Invalid date format: {}", date, e);
-            ResponseVO responseVO = new ResponseVO("Error", "Invalid date format. Expected yyyy-M-dd", null, HttpStatus.BAD_REQUEST);
+            ResponseVO responseVO = new ResponseVO("Error", "Invalid date format. Expected yyyy-M-dd", null);
             return ResponseEntity.badRequest().body(responseVO);
         } catch (Exception e) {
             log.error("Unexpected error while adding expense: {}", e.getMessage());
-            ResponseVO responseVO = new ResponseVO("Error", "An unexpected error occurred", null, HttpStatus.BAD_REQUEST);
+            ResponseVO responseVO = new ResponseVO("Error", "An unexpected error occurred", null);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseVO);
         }
     }
@@ -154,7 +154,7 @@ public class ExpenseService {
 
         if (optionalExpense.isEmpty()) {
             log.warn("Attempted to update a non-existent expense with ID {}", id);
-            ResponseVO responseVO = new ResponseVO("Error", "Expense not found", null, HttpStatus.BAD_REQUEST);
+            ResponseVO responseVO = new ResponseVO("Error", "Expense not found", null);
             return ResponseEntity.badRequest().body(responseVO);
         }
 
@@ -178,11 +178,11 @@ public class ExpenseService {
 
             expenseRepository.save(expense);
             log.info("Expense updated successfully: {}", expense);
-            ResponseVO responseVO = new ResponseVO("Success", "Expense Updated", expense, HttpStatus.OK);
+            ResponseVO responseVO = new ResponseVO("Success", "Expense Updated", expense);
             return ResponseEntity.ok(responseVO);
         } catch (Exception e) {
             log.error("Error updating expense with ID {}: {}", id, e.getMessage());
-            ResponseVO responseVO = new ResponseVO("Error", "Invalid input data", null, HttpStatus.BAD_REQUEST);
+            ResponseVO responseVO = new ResponseVO("Error", "Invalid input data", null);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseVO);
         }
     }

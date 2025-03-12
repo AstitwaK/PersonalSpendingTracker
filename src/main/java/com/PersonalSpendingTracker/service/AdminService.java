@@ -37,7 +37,7 @@ public class AdminService {
                 .collect(Collectors.toList());
 
         // Wrapping the response in ResponseEntity
-        ResponseVO response = new ResponseVO("Success", "List of all users", userVOList, HttpStatus.OK);
+        ResponseVO response = new ResponseVO("Success", "List of all users", userVOList);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -62,12 +62,12 @@ public class AdminService {
                     user.setStatus(true);  // Deactivating the user
                     userRepository.save(user);
                     log.info("User {} deactivated successfully", id);
-                    ResponseVO response = new ResponseVO("Success", "User deactivated", user, HttpStatus.OK);
+                    ResponseVO response = new ResponseVO("Success", "User deactivated", user);
                     return new ResponseEntity<>(response, HttpStatus.OK);
                 })
                 .orElseGet(() -> {
                     log.warn("User with ID {} not found for deactivation", id);
-                    ResponseVO response = new ResponseVO("Error", "User not found", null, HttpStatus.BAD_REQUEST);
+                    ResponseVO response = new ResponseVO("Error", "User not found", null);
                     return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                 });
     }
@@ -85,7 +85,7 @@ public class AdminService {
 
         if (optionalUser.isEmpty()) {
             log.warn("User with ID {} not found", id);
-            ResponseVO response = new ResponseVO("Error", "User Not Found", null, HttpStatus.BAD_REQUEST);
+            ResponseVO response = new ResponseVO("Error", "User Not Found", null);
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
@@ -112,7 +112,7 @@ public class AdminService {
         userRepository.save(existingUser);
         log.info("User successfully updated: {}", existingUser);
 
-        ResponseVO response = new ResponseVO("Status", "User Updated Successfully", existingUser, HttpStatus.OK);
+        ResponseVO response = new ResponseVO("Status", "User Updated Successfully", existingUser);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
