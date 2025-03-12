@@ -3,98 +3,98 @@ package com.PersonalSpendingTracker.service;
 import com.PersonalSpendingTracker.VO.ResponseVO;
 import com.PersonalSpendingTracker.model.User;
 import com.PersonalSpendingTracker.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;
+import java.util.Optional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
+
+    private final UserRepository userRepository;
 
     public ResponseEntity<ResponseVO> login(String name, String password) {
-        return userRepository.findActiveUserByUserName(name)
-                .map(user -> {
-                    if (validatePassword(user, password)) {
-                        log.info("User successfully Logged In");
-                        ResponseVO response = instantiateResponseVO("Success", "User successfully Logged In", user);
-                        return new ResponseEntity<>(response, HttpStatus.OK);
-                    } else {
-                        log.error("User entered wrong password");
-                        ResponseVO response = instantiateResponseVO("Error", "User entered wrong password", null);
-                        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-                    }
-                })
-                .orElseGet(() -> {
-                    ResponseVO response = instantiateResponseVO("Error", "User name not found", null);
-                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-                });
-    }
+        Optional<User> userOptional = userRepository.findActiveUserByUserName(name);
 
-    // Now validatePassword() only checks if the password matches and returns a boolean
-    private boolean validatePassword(User user, String password) {
-        String decodedPassword = decodeBase64(user.getPassword());
-        return decodedPassword.equals(password);
-    }
+        if (userOptional.isEmpty()) {
+            return buildErrorResponse("User name not found", HttpStatus.BAD_REQUEST);
+        }
 
-    private ResponseVO instantiateResponseVO(String status, String message, Object data) {
-        return new ResponseVO(status, message, data);
+        User user = userOptional.get();
+        if (validatePassword(user, password)) {
+            log.info("User successfully logged in");
+            return buildSuccessResponse("User successfully logged in", user);
+        } else {
+            log.error("User entered wrong password");
+            return buildErrorResponse("User entered wrong password", HttpStatus.UNAUTHORIZED);
+        }
     }
-
-    private String decodeBase64(String encodedString) {
-        return new String(Base64.getDecoder().decode(encodedString));
-    }
-
 
     public ResponseEntity<ResponseVO> register(String name, String email, String password, String phone) {
         if (userRepository.findActiveUserByUserNameAndEmail(name, email).isPresent()) {
             log.error("User Name or email already exists");
-            return new ResponseEntity<>(instantiateResponseVO("Error", "User Name or email already exists", null), HttpStatus.BAD_REQUEST);
+            return buildErrorResponse("User Name or email already exists", HttpStatus.BAD_REQUEST);
         }
 
-        String encodedPassword = Base64.getEncoder().encodeToString(password.getBytes());
-
-        User user = User.builder()
-                .userName(name)
-                .email(email)
-                .password(encodedPassword)
-                .phone(phone)
-                .status(true)
-                .build();
-
+        User user = createUser(name, email, password, phone);
         userRepository.save(user);
         log.info("User successfully registered");
-        return new ResponseEntity<>(instantiateResponseVO("Success", "User successfully registered", user), HttpStatus.OK);
+        return buildSuccessResponse("User successfully registered", user);
     }
 
     public ResponseEntity<ResponseVO> passwordChange(Long id, String password) {
         return userRepository.findById(id)
                 .map(user -> {
-                    user.setPassword(Base64.getEncoder().encodeToString(password.getBytes()));
+                    user.setPassword(encodeBase64(password));
                     userRepository.save(user);
                     log.info("Password successfully updated");
-                    return new ResponseEntity<>(new ResponseVO("Success", "Password Changed", user), HttpStatus.OK);
+                    return buildSuccessResponse("Password Changed", user);
                 })
-                .orElseGet(() -> {
-                    log.error("Password Not updated");
-                    return new ResponseEntity<>(new ResponseVO("Error", "User not found", null), HttpStatus.BAD_REQUEST);
-                });
+                .orElseGet(() -> buildErrorResponse("User not found", HttpStatus.BAD_REQUEST));
     }
 
     public ResponseEntity<ResponseVO> forgotPassword(String phone) {
         return userRepository.findByPhone(phone)
                 .map(user -> {
-                    log.info("Password reset");
-                    return new ResponseEntity<>(new ResponseVO("Success", "Password reset", user), HttpStatus.OK);
+                    log.info("Password reset request received");
+                    return buildSuccessResponse("Password reset", user);
                 })
-                .orElseGet(() -> {
-                    log.error("User with phone not found");
-                    return new ResponseEntity<>(new ResponseVO("Error", "User not found", null), HttpStatus.BAD_REQUEST);
-                });
+                .orElseGet(() -> buildErrorResponse("User not found", HttpStatus.BAD_REQUEST));
+    }
+
+    private boolean validatePassword(User user, String password) {
+        return decodeBase64(user.getPassword()).equals(password);
+    }
+
+    private User createUser(String name, String email, String password, String phone) {
+        return User.builder()
+                .userName(name)
+                .email(email)
+                .password(encodeBase64(password))
+                .phone(phone)
+                .status(true)
+                .build();
+    }
+
+    private ResponseEntity<ResponseVO> buildSuccessResponse(String message, Object data) {
+        return new ResponseEntity<>(new ResponseVO("Success", message, data), HttpStatus.OK);
+    }
+
+    private ResponseEntity<ResponseVO> buildErrorResponse(String message, HttpStatus status) {
+        return new ResponseEntity<>(new ResponseVO("Error", message, null), status);
+    }
+
+    private String encodeBase64(String input) {
+        return Base64.getEncoder().encodeToString(input.getBytes());
+    }
+
+    private String decodeBase64(String encodedString) {
+        return new String(Base64.getDecoder().decode(encodedString));
     }
 }

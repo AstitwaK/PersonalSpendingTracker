@@ -3,6 +3,7 @@ package com.PersonalSpendingTracker.service;
 import com.PersonalSpendingTracker.VO.ResponseVO;
 import com.PersonalSpendingTracker.VO.UserVO;
 import com.PersonalSpendingTracker.dto.AdminUpdateDto;
+import com.PersonalSpendingTracker.exception.UserNotFoundException;
 import com.PersonalSpendingTracker.model.User;
 import com.PersonalSpendingTracker.repository.UserRepository;
 import jakarta.validation.Valid;
@@ -57,40 +58,33 @@ public class AdminService {
 
     // Method to deactivate a user
     public ResponseEntity<ResponseVO> deleteUser(Long id) {
-        return userRepository.findById(id)
-                .map(user -> {
-                    user.setStatus(true);  // Deactivating the user
-                    userRepository.save(user);
-                    log.info("User {} deactivated successfully", id);
-                    ResponseVO response = new ResponseVO("Success", "User deactivated", user);
-                    return new ResponseEntity<>(response, HttpStatus.OK);
-                })
-                .orElseGet(() -> {
-                    log.warn("User with ID {} not found for deactivation", id);
-                    ResponseVO response = new ResponseVO("Error", "User not found", null);
-                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-                });
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User with ID " + id + " not found"));
+
+        user.setStatus(true);  // Deactivating the user
+        userRepository.save(user);
+        log.info("User {} deactivated successfully", id);
+
+        ResponseVO response = new ResponseVO("Success", "User deactivated", user);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
     // Method to update user details
     public ResponseEntity<ResponseVO> userUpdate(@Valid AdminUpdateDto adminUpdateDto, Long id) {
-        return userRepository.findById(id)
-                .map(existingUser -> {
-                    Optional.ofNullable(adminUpdateDto.getUserName()).ifPresent(existingUser::setUserName);
-                    Optional.ofNullable(adminUpdateDto.getEmail()).ifPresent(existingUser::setEmail);
-                    Optional.ofNullable(adminUpdateDto.getPassword())
-                            .ifPresent(password -> existingUser.setPassword(Base64.getEncoder().encodeToString(password.getBytes())));
-                    Optional.ofNullable(adminUpdateDto.getPhone()).ifPresent(existingUser::setPhone);
-                    Optional.ofNullable(adminUpdateDto.getCreatedTimestamp()).ifPresent(existingUser::setCreatedTimestamp);
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User with ID " + id + " not found"));
 
-                    userRepository.save(existingUser);
-                    log.info("User successfully updated: {}", existingUser);
+        Optional.ofNullable(adminUpdateDto.getUserName()).ifPresent(existingUser::setUserName);
+        Optional.ofNullable(adminUpdateDto.getEmail()).ifPresent(existingUser::setEmail);
+        Optional.ofNullable(adminUpdateDto.getPassword())
+                .ifPresent(password -> existingUser.setPassword(Base64.getEncoder().encodeToString(password.getBytes())));
+        Optional.ofNullable(adminUpdateDto.getPhone()).ifPresent(existingUser::setPhone);
+        Optional.ofNullable(adminUpdateDto.getCreatedTimestamp()).ifPresent(existingUser::setCreatedTimestamp);
 
-                    return ResponseEntity.ok(new ResponseVO("Status", "User Updated Successfully", existingUser));
-                })
-                .orElseGet(() -> {
-                    log.warn("User with ID {} not found", id);
-                    return ResponseEntity.badRequest().body(new ResponseVO("Error", "User Not Found", null));
-                });
+        userRepository.save(existingUser);
+        log.info("User successfully updated: {}", existingUser);
+
+        return ResponseEntity.ok(new ResponseVO("Status", "User Updated Successfully", existingUser));
     }
 }
 
