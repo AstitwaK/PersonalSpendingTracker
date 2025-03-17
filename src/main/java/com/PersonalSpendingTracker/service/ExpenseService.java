@@ -47,6 +47,7 @@ public class ExpenseService {
     }
 
     public ResponseEntity<ResponseVO> findAllExpenses(String userName, String startDateStr, String endDateStr) {
+        // Exception for user not found
         User user = getByName(userName);
         LocalDate startDate = parseDate(startDateStr);
         LocalDate endDate = parseDate(endDateStr);

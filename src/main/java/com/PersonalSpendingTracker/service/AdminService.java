@@ -24,7 +24,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @Validated
-public class AdminService {
+public class AdminService
+{
     @Autowired
     private UserRepository userRepository;
 
@@ -67,24 +68,6 @@ public class AdminService {
 
         ResponseVO response = new ResponseVO("Success", "User deactivated", user);
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    // Method to update user details
-    public ResponseEntity<ResponseVO> userUpdate(@Valid AdminUpdateDto adminUpdateDto, Long id) {
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User with ID " + id + " not found"));
-
-        Optional.ofNullable(adminUpdateDto.getUserName()).ifPresent(existingUser::setUserName);
-        Optional.ofNullable(adminUpdateDto.getEmail()).ifPresent(existingUser::setEmail);
-        Optional.ofNullable(adminUpdateDto.getPassword())
-                .ifPresent(password -> existingUser.setPassword(Base64.getEncoder().encodeToString(password.getBytes())));
-        Optional.ofNullable(adminUpdateDto.getPhone()).ifPresent(existingUser::setPhone);
-        Optional.ofNullable(adminUpdateDto.getCreatedTimestamp()).ifPresent(existingUser::setCreatedTimestamp);
-
-        userRepository.save(existingUser);
-        log.info("User successfully updated: {}", existingUser);
-
-        return ResponseEntity.ok(new ResponseVO("Status", "User Updated Successfully", existingUser));
     }
 }
 

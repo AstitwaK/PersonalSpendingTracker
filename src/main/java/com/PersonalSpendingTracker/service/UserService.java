@@ -1,6 +1,7 @@
 package com.PersonalSpendingTracker.service;
 
 import com.PersonalSpendingTracker.VO.ResponseVO;
+import com.PersonalSpendingTracker.dto.UserRequestDto;
 import com.PersonalSpendingTracker.model.User;
 import com.PersonalSpendingTracker.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,13 +37,12 @@ public class UserService {
         }
     }
 
-    public ResponseEntity<ResponseVO> register(String name, String email, String password, String phone) {
-        if (userRepository.findActiveUserByUserNameAndEmail(name, email).isPresent()) {
+    public ResponseEntity<ResponseVO> register(UserRequestDto userRequest) {
+        if (userRepository.findActiveUserByUserNameAndEmail(userRequest.getUserName(), userRequest.getEmail()).isPresent()) {
             log.error("User Name or email already exists");
             return buildErrorResponse("User Name or email already exists", HttpStatus.BAD_REQUEST);
         }
-
-        User user = createUser(name, email, password, phone);
+        User user = createUser(userRequest.getUserName(), userRequest.getEmail(), userRequest.getPassword(), userRequest.getPassword());
         userRepository.save(user);
         log.info("User successfully registered");
         return buildSuccessResponse("User successfully registered", user);

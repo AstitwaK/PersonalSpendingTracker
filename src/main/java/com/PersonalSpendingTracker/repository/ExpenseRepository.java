@@ -9,16 +9,16 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
+
 
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long>
 {
 
-    @Query(value = "SELECT * FROM expense WHERE user_id = :userId", nativeQuery = true)
+    @Query(value = "SELECT * FROM expense WHERE user_name = :userId", nativeQuery = true)
     List<Expense> findByUser(@Param("userId") Long userId);
 
-    @Query(value = "SELECT * FROM expense WHERE date BETWEEN :startDate AND :endDate AND user_id = :userId", nativeQuery = true)
+    @Query(value = "SELECT * FROM expense WHERE exp_date BETWEEN :startDate AND :endDate AND user_name = :userId", nativeQuery = true)
     List<Expense> findByDateBetweenAndUser(@Param("startDate") Date startDate,
                                            @Param("endDate") Date endDate,
                                            @Param("userId") Long userId);

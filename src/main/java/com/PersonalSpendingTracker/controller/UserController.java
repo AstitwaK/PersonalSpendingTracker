@@ -1,8 +1,10 @@
 package com.PersonalSpendingTracker.controller;
 
 import com.PersonalSpendingTracker.VO.ResponseVO;
+import com.PersonalSpendingTracker.dto.UserRequestDto;
 import com.PersonalSpendingTracker.model.User;
 import com.PersonalSpendingTracker.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,8 +27,8 @@ public class UserController {
     * */
     @PostMapping("/register")
     @ResponseBody
-    public ResponseEntity<ResponseVO> register(@RequestBody User user) {
-        return userService.register(user.getUserName(), user.getPassword(), user.getPassword(), user.getPhone());
+    public ResponseEntity<ResponseVO> register(@Valid @RequestBody UserRequestDto userRequest) {
+        return userService.register(userRequest);
     }
 
     @PostMapping("/forgot")

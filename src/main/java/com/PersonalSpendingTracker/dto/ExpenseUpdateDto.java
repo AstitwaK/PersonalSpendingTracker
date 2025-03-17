@@ -1,5 +1,6 @@
 package com.PersonalSpendingTracker.dto;
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
@@ -9,7 +10,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExpenseUpdateDto {
-    @NotNull(message = "Expense name cannot be null")
+    @NotEmpty(message = "Expense name cannot be null")
     private String expName;
 
     @NotNull(message = "Date cannot be null")

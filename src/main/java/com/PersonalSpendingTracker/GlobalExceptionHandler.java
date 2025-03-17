@@ -20,25 +20,25 @@ public class GlobalExceptionHandler {
 
     // Handle User Not Found Exception
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleUserNotFoundException(UserNotFoundException ex) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "Error");
-        response.put("message", ex.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ResponseVO> handleUserNotFoundException(UserNotFoundException ex) {
+        ResponseVO response = new ResponseVO("Error", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     // Handle Validation Errors (e.g., @Valid validation failures)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseVO handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        return errors;
+        return new ResponseVO("Error", "Validation failed", errors);
     }
+
+    // Handle Expense Not Found Exception
     @ExceptionHandler(ExpenseNotFoundException.class)
     public ResponseEntity<ResponseVO> handleExpenseNotFoundException(ExpenseNotFoundException ex) {
         ResponseVO response = new ResponseVO("Error", ex.getMessage(), null);
@@ -47,17 +47,16 @@ public class GlobalExceptionHandler {
 
     // Handle Generic Exceptions
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "Error");
-        response.put("message", "An unexpected error occurred: " + ex.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ResponseVO> handleGenericException(Exception ex) {
+        ResponseVO response = new ResponseVO("Error", "An unexpected error occurred: " + ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
+    // Handle Runtime Exceptions
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ResponseVO> handleRuntimeException(RuntimeException ex) {
         log.error("Runtime error: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ResponseVO("Error", ex.getMessage(), null));
+        ResponseVO response = new ResponseVO("Error", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }
