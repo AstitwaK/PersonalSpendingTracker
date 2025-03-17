@@ -37,7 +37,8 @@ public class ExpenseService {
     }
 
     public List<Expense> getExpensesByDateRange(Date startDate, Date endDate, User user) {
-        return expenseRepository.findByDateBetweenAndUser(startDate, endDate, user.getId());
+        Long id = user.getId();
+        return expenseRepository.findByDateBetweenAndUser(startDate, endDate, id);
     }
 
     public double calculateTotalExpense(List<Expense> expenses) {
@@ -47,10 +48,9 @@ public class ExpenseService {
     }
 
     public ResponseEntity<ResponseVO> findAllExpenses(String userName, String startDateStr, String endDateStr) {
-        // Exception for user not found
         User user = getByName(userName);
-        LocalDate startDate = parseDate(startDateStr);
-        LocalDate endDate = parseDate(endDateStr);
+        LocalDate startDate = getParseDate(startDateStr);
+        LocalDate endDate = getParseDate(endDateStr);
 
         List<Expense> expenses = (startDate != null && endDate != null)
                 ? getExpensesByDateRange(
@@ -118,6 +118,11 @@ public class ExpenseService {
     private LocalDate parseDate(String dateStr) {
         return (dateStr == null || dateStr.isBlank())
                 ? LocalDate.of(2000, 1, 1)
+                : LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-M-dd"));
+    }
+    private LocalDate getParseDate(String dateStr) {
+        return (dateStr == null || dateStr.isBlank())
+                ? null
                 : LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-M-dd"));
     }
 }

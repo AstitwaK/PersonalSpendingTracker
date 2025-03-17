@@ -62,7 +62,7 @@ public class AdminService
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User with ID " + id + " not found"));
 
-        user.setStatus(true);  // Deactivating the user
+        user.setStatus(false);  // Deactivating the user
         userRepository.save(user);
         log.info("User {} deactivated successfully", id);
 

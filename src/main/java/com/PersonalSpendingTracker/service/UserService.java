@@ -42,7 +42,7 @@ public class UserService {
             log.error("User Name or email already exists");
             return buildErrorResponse("User Name or email already exists", HttpStatus.BAD_REQUEST);
         }
-        User user = createUser(userRequest.getUserName(), userRequest.getEmail(), userRequest.getPassword(), userRequest.getPassword());
+        User user = createUser(userRequest.getUserName(), userRequest.getEmail(), userRequest.getPassword(), userRequest.getPhone());
         userRepository.save(user);
         log.info("User successfully registered");
         return buildSuccessResponse("User successfully registered", user);

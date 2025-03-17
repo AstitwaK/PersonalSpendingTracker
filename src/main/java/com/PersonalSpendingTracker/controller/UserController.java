@@ -2,7 +2,6 @@ package com.PersonalSpendingTracker.controller;
 
 import com.PersonalSpendingTracker.VO.ResponseVO;
 import com.PersonalSpendingTracker.dto.UserRequestDto;
-import com.PersonalSpendingTracker.model.User;
 import com.PersonalSpendingTracker.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +21,6 @@ public class UserController {
         return userService.login(name,password);
     }
 
-    /* TODO
-    *     Create UserRequest instead of User entity while registering the user. And apply validations using annotations.
-    * */
     @PostMapping("/register")
     @ResponseBody
     public ResponseEntity<ResponseVO> register(@Valid @RequestBody UserRequestDto userRequest) {
