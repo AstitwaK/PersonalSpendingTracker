@@ -2,11 +2,9 @@ package com.PersonalSpendingTracker.service;
 
 import com.PersonalSpendingTracker.VO.ResponseVO;
 import com.PersonalSpendingTracker.VO.UserVO;
-import com.PersonalSpendingTracker.dto.AdminUpdateDto;
 import com.PersonalSpendingTracker.exception.UserNotFoundException;
 import com.PersonalSpendingTracker.model.User;
 import com.PersonalSpendingTracker.repository.UserRepository;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,9 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j

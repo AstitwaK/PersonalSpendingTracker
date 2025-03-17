@@ -1,9 +1,7 @@
 package com.PersonalSpendingTracker.controller;
 
 import com.PersonalSpendingTracker.VO.ResponseVO;
-import com.PersonalSpendingTracker.dto.AdminUpdateDto;
 import com.PersonalSpendingTracker.service.AdminService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
