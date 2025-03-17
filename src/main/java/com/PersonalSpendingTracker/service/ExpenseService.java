@@ -27,26 +27,31 @@ public class ExpenseService {
     @Autowired
     private ExpenseRepository expenseRepository;
 
+    // Get User by Username
     public User getByName(String userName) {
         return userRepository.findActiveUserByUserName(userName)
                 .orElseThrow(() -> new UserNotFoundException("User not found for username: " + userName));
     }
 
+    // Retrieve all Expenses for a User
     public List<Expense> findAllExpenses(User user) {
         return expenseRepository.findByUser(user.getId());
     }
 
+    // Get Expenses by Date Range for a User
     public List<Expense> getExpensesByDateRange(Date startDate, Date endDate, User user) {
         Long id = user.getId();
         return expenseRepository.findByDateBetweenAndUser(startDate, endDate, id);
     }
 
+    // Calculate Total Expense
     public double calculateTotalExpense(List<Expense> expenses) {
         return expenses.stream()
                 .mapToDouble(expense -> expense.getCostOfExp() * expense.getQuantity())
                 .sum();
     }
 
+    // Find All Expenses with Optional Date Range
     public ResponseEntity<ResponseVO> findAllExpenses(String userName, String startDateStr, String endDateStr) {
         User user = getByName(userName);
         LocalDate startDate = getParseDate(startDateStr);
@@ -69,6 +74,7 @@ public class ExpenseService {
                 "Expenses list found by Date" : "Expenses list found", responseData));
     }
 
+    // Delete an Expense by ID
     public ResponseEntity<ResponseVO> deleteById(Long id) {
         if (!expenseRepository.existsById(id)) {
             throw new ExpenseNotFoundException("Expense not found with ID: " + id);
@@ -79,6 +85,7 @@ public class ExpenseService {
         return ResponseEntity.ok(new ResponseVO("Success", "Expense Deleted", null));
     }
 
+    // Add New Expense for a User
     public ResponseEntity<ResponseVO> addExpense(String userName, ExpenseUpdateDto expenseDTO) {
         User user = getByName(userName);
         LocalDate parsedDate = parseDate(expenseDTO.getDate());
@@ -97,6 +104,7 @@ public class ExpenseService {
         return ResponseEntity.ok(new ResponseVO("Success", "Expense Added", expense));
     }
 
+    // Update an Existing Expense
     public ResponseEntity<ResponseVO> updateExpense(Long id, ExpenseUpdateDto expenseDTO) {
         Expense expense = expenseRepository.findById(id)
                 .orElseThrow(() -> new ExpenseNotFoundException("Expense not found with ID: " + id));
@@ -115,11 +123,14 @@ public class ExpenseService {
         return ResponseEntity.ok(new ResponseVO("Success", "Expense Updated", expense));
     }
 
+    // Parse Date
     private LocalDate parseDate(String dateStr) {
         return (dateStr == null || dateStr.isBlank())
                 ? LocalDate.of(2000, 1, 1)
                 : LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-M-dd"));
     }
+
+    // Get Parsed Date (returns null if blank)
     private LocalDate getParseDate(String dateStr) {
         return (dateStr == null || dateStr.isBlank())
                 ? null
