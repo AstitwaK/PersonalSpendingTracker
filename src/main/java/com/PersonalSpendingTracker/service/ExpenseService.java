@@ -100,7 +100,7 @@ public class ExpenseService {
                 .build();
 
         expenseRepository.save(expense);
-        log.info("Expense successfully added: {}", expense);
+        log.info("Expense successfully added: {}", expense.getExpName());
         return ResponseEntity.ok(new ResponseVO("Success", "Expense Added", expense));
     }
 
@@ -119,7 +119,7 @@ public class ExpenseService {
         if (expenseDTO.getCreatedTimestamp() != null) expense.setCreatedTimestamp(expenseDTO.getCreatedTimestamp());
 
         expenseRepository.save(expense);
-        log.info("Expense updated successfully: {}", expense);
+        log.info("Expense updated successfully: {}", expense.getExpName());
         return ResponseEntity.ok(new ResponseVO("Success", "Expense Updated", expense));
     }
 
