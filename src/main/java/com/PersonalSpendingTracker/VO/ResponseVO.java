@@ -1,7 +1,6 @@
 package com.PersonalSpendingTracker.VO;
 
 import lombok.*;
-import org.springframework.http.HttpStatus;
 
 @Data
 @AllArgsConstructor
