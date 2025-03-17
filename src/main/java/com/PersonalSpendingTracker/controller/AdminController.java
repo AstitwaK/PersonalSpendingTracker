@@ -44,6 +44,9 @@ public class AdminController {
         return new ResponseEntity<>(responseVO, httpStatus);
     }
 
+    /*TODO
+    * Admin cannot update the user details
+    * */
     @PostMapping("/update/{id}")
     @ResponseBody
     public ResponseEntity<ResponseVO> updateUser(@PathVariable(value = "id") long id,@Valid @RequestBody AdminUpdateDto adminUpdateDto)

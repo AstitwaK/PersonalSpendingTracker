@@ -20,6 +20,9 @@ public class UserController {
         return userService.login(name,password);
     }
 
+    /* TODO
+    *     Create UserRequest instead of User entity while registering the user. And apply validations using annotations.
+    * */
     @PostMapping("/register")
     @ResponseBody
     public ResponseEntity<ResponseVO> register(@RequestBody User user) {
